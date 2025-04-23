@@ -1,0 +1,40 @@
+1. Uçuşların siyahısı(time, destination, flight ID)
+2. Məlumatın çıxışa verilməsi (time, destination, flight ID, free seats, remarks, gate)
+
+
+-----------------------------
+1. Spesifik ucus, menu (Fatime)
+2. search, adina olan ucuslar (Abbas)
+3. bilet alinmasi, qaytarilmasi (Murad)
+4. database oxumaq, yazmaq (Elmir)
+-----------------------------
+
+
+
+Options:
+    1. Spesifik uçuş məlumatı
+    2. search
+        1. bilet alınması
+    3. bilet qaytarmaq
+    4. adına olan uçuşlar
+    5. exit
+
+
+
+
+Database:
+
+flights:
+    ID: 25NGGRS
+    destination: london
+    date: 24/04/2025 23:12
+    free seats: 25
+
+Users:
+    ID: 55
+    name: John
+    surname: Pork
+    tickets: [25NGGRS-3]
+
+
+
