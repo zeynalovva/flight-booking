@@ -1,4 +1,4 @@
 package com.flightbooking;
-//master
+//master2
 public class Flight {
 }
