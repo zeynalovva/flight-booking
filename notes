@@ -28,13 +28,48 @@ flights:
     ID: 25NGGRS
     destination: london
     date: 24/04/2025 23:12
+    passengers: [55, 14, 199]
     free seats: 25
+
+    ID: 62JDMA
+    destination: Baku
+    date: 25/04/2025 12:25
+    passengers: []
+    free seats: 100
+
+
+tickets:
+    ID: 11424
+    flight ID: 25NGGRS
+    user ID: 55
+    booker ID: 55
+
+
+    ID: 11425
+    flight ID: 25NGGRS
+    user ID: 14
+    booker ID: 55
+
+    ID: 11428
+    flight ID: 25NGGRS
+    user ID: 199
+    booker ID: 55
 
 Users:
     ID: 55
     name: John
     surname: Pork
-    tickets: [25NGGRS-3]
+    booked tickets: [11424, 11425, 11428]
+
+    ID: 14
+    name: Tim
+    surname: Cheese
+    booked tickets: []
+
+    ID: 199
+    name: John
+    surname: Wick
+    booked tickets: []
 
 
 
