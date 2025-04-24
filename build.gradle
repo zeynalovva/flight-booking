@@ -10,7 +10,9 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.19.0-rc2'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.19.0-rc2'
+
 }
 
 test {
