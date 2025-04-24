@@ -54,6 +54,13 @@ tickets:
     user ID: 199
     booker ID: 55
 
+list = [[55, "John", "Pork", [11424,11425, 11528]],.....]
+
+user1 = list[0]
+user1[0]
+user1[1]
+
+
 Users:
     ID: 55
     name: John
