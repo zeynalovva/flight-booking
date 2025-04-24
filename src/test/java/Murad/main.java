@@ -1,5 +1,5 @@
 package Murad;
-//branch testing
+//branch testings
 public class main {
     public static void main(String[] args) {
 
