@@ -1,7 +1,10 @@
 package com.flightbooking.murad;
 
 import com.flightbooking.Flight;
+import com.flightbooking.Ticket;
 import com.flightbooking.User;
+import com.flightbooking.database.Data;
+import com.flightbooking.SearchEngine.Search;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,27 +12,36 @@ import java.util.Scanner;
 import java.util.UUID;
 
 public class BookTickets {
-    private Database database;
+    private Data database;
     private final Scanner scanner;
+    private final Search searchEngine;
 
-    public BookTickets(Database database) {
+
+    public BookTickets(Data database) {
         this.database = database;
         this.scanner = new Scanner(System.in);
+        this.searchEngine = new Search(database);
     }
     public void StartBookingTickets(String bookerId, String flightId, List<String> passengerIds) {
         try {
-            List<Flight> filteredFlights = filterFlights();
-            displayFlights(filteredFlights);
-            Flight selectedFlight = selectFlight(filteredFlights);
-            if (selectedFlight == null) return;//display the Filtered flights
-            if (selectedFlight.getAvailableSeats() > 0) {
-                enterBookerCredentials();
-                System.out.println("Booking tickets...");
-                database.bookTickets(bookerId, selectedFlight.getFlightId(), passengerIds);
-                System.out.println("Tickets booked successfully!");
-            } else {
-                System.out.println("No available seats on this flight.");
+            System.out.print("Enter destination: ");
+            String destination = scanner.nextLine();
+            System.out.print("Enter travel date (dd/MM/yyyy): ");
+            String date = scanner.nextLine();
+            System.out.print("Number of seats needed: ");
+            int quantity = scanner.nextInt();
+            scanner.nextLine();
+            List<Flight> filteredFlights = searchEngine.filterFlights(destination, date, quantity);
+            if(filteredFlights.isEmpty()) {
+                System.out.println("No flights available matching your criteria");
+                return;
             }
+            displayFlights(filteredFlights);//display the Filtered flights
+            Flight selectedFlight = selectFlight(filteredFlights);
+            if (selectedFlight == null) return;
+            User booker = enterBookerCredentials();
+            List<User> passengers = addPassengerInformation();
+
 
         } catch (Exception e) {
             System.out.printf("Error: " + e.getMessage());;
@@ -73,7 +85,7 @@ public class BookTickets {
     }
 
     //enter booker credentials
-    private void enterBookerCredentials() {
+    private User enterBookerCredentials() {
         System.out.println("\n=== Booker Information ===");
         System.out.print("Name: ");
         String name = scanner.nextLine().trim();
@@ -110,6 +122,13 @@ public class BookTickets {
         return passengers;
 
     }
+
+    private Ticket createTicket(Flight flight, User booker, User passenger) {
+        String randomid=UUID.randomUUID().toString();
+        Ticket newTicket = new Ticket(randomid, flight.getFlightId(), passenger.getUserId(), booker.getUserId());
+        return newTicket;
+    }
+
 
 
 }
