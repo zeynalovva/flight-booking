@@ -1,4 +1,4 @@
-package com.flightbooking.murad;
+package com.flightbooking.Booking;
 
 import com.flightbooking.Flight;
 import com.flightbooking.Ticket;
@@ -24,57 +24,53 @@ public class BookTickets {
     }
     public void StartBookingTickets(String bookerId, String flightId, List<String> passengerIds) {
         try {
-            System.out.print("Enter destination: ");
-            String destination = scanner.nextLine();
-            System.out.print("Enter travel date (dd/MM/yyyy): ");
-            String date = scanner.nextLine();
-            System.out.print("Number of seats needed: ");
-            int quantity = scanner.nextInt();
-            scanner.nextLine();
-            List<Flight> filteredFlights = searchEngine.filterFlights(destination, date, quantity);
-            if(filteredFlights.isEmpty()) {
-                System.out.println("No flights available matching your criteria");
-                return;
-            }
-            displayFlights(filteredFlights);//display the Filtered flights
-            Flight selectedFlight = selectFlight(filteredFlights);
-            if (selectedFlight == null) return;
             User booker = enterBookerCredentials();
             List<User> passengers = addPassengerInformation();
-
+            database.saveToFile();
 
         } catch (Exception e) {
             System.out.printf("Error: " + e.getMessage());;
         }
     }
 
+    //process booking
+    public void Booking(Flight flight, User booker, List<User> passengers){
+        List<Ticket> newTickets = new ArrayList<>();
+        for(User passenger : passengers) {
+            Ticket ticket = createTicket(flight, booker, passenger);
+            newTickets.add(ticket);
+            database.addTicket(ticket);
+
+            // Update flight passengers
+            flight.getPassengers().add(passenger.getUserId());
+        }
+
+        // Update flight seats
+        flight.setAvailableSeats(flight.getAvailableSeats() - passengers.size());
+        Flight tempFlight=flight;
+        database.getFlights().removeIf(f -> f.getFlightId().equals(tempFlight.getFlightId()));
+        database.addFlight(tempFlight);
+
+        User tempBooker = new User(
+                booker.getUserId(),
+                booker.getName(),
+                booker.getSurname(),
+                new ArrayList<>(booker.getBookedTickets())
+        );
+        newTickets.forEach(ticket -> tempBooker.getBookedTickets().add(ticket.getTicketId()));
+
+        database.getUsers().removeIf(u -> u.getUserId().equals(tempBooker.getUserId()));
+        database.addUser(tempBooker);
+
+        // Add all new tickets
+        newTickets.forEach(database::addTicket);
+
+    }
+
+
 
     public void cancelTickets(String TicketId){}
 
-    public void addPessengers(String name, String surname, String passportId) {
-    }
-    private void displayFlights(List<Flight> flights) {
-        System.out.println("\nAvailable Flights:");
-        for (int i = 0; i < flights.size(); i++) {
-            Flight f = flights.get(i);
-            System.out.printf("%d. %s | %s | Seats: %d | Date: %s\n",
-                    i + 1, f.getFlightId(), f.getDestination(),
-                    f.getAvailableSeats(), f.getDateAndTime());
-        }
-    }
-    //select flight by its ID
-    private Flight selectFlight(List<Flight> flights) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter the flight ID to book: ");
-        String flightId = scanner.nextLine();
-        for (Flight f : flights) {
-            if (f.getFlightId().equals(flightId)) {
-                return f;
-            }
-        }
-        System.out.println("Invalid flight ID.");
-        return null;
-    }
 
     private User createNewUser(String name, String surname) {
         String randomid=UUID.randomUUID().toString();
