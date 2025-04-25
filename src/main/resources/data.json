@@ -11,12 +11,6 @@
     "date and time" : "2025-04-28 15:30",
     "passengers" : [ ],
     "free seats" : 21
-  },{
-    "id" : "FL124",
-    "destination" : "New York",
-    "date and time" : "2025-04-28 11:00",
-    "passengers" : [ ],
-    "free seats" : 10
   } ],
   "users" : [ {
     "id" : "USR123",
@@ -34,10 +28,4 @@
     "flight id" : "FL123",
     "user id" : "USR123",
     "booker id" : "USR456"
-  },{
-    "id" : "TCK124",
-    "flight id" : "FL123",
-    "user id" : "USR456",
-    "booker id" : "USR456"
-  }]
 }
