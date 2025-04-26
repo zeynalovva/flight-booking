@@ -45,6 +45,11 @@ public class Search {
      * @return list of available flights
      */
     public List<Flight> filterFlights(String destination, String date, int quantity){
+
+        if (data == null || data.getFlights() == null) {
+            return new ArrayList<>();
+        }
+
         List<Flight> list = data.getFlights();
         List<Flight> temp = new ArrayList<>();
         for(Flight atr : list){
