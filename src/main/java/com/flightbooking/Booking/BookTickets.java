@@ -16,28 +16,23 @@ public class BookTickets {
     private final Scanner scanner;
     private final Search searchEngine;
 
-
-    public BookTickets(Data database) {
+    public BookTickets(Data database, Search search) {
         this.database = database;
         this.scanner = new Scanner(System.in);
-        this.searchEngine = new Search(database);
-    }
-    public void StartBookingTickets(String bookerId, String flightId, List<String> passengerIds) {
-        try {
-            User booker = enterBookerCredentials();
-            List<User> passengers = addPassengerInformation();
-            database.saveToFile();
-
-        } catch (Exception e) {
-            System.out.printf("Error: " + e.getMessage());;
-        }
+        this.searchEngine = search ;
     }
 
-    //process booking
+    /**
+     *
+     * @param flight the flight that the booker has chosen
+     * @param booker the user himself
+     * @param passengers list of passengers who are going to be in the flight
+     */
+
     public void Booking(Flight flight, User booker, List<User> passengers){
         List<Ticket> newTickets = new ArrayList<>();
         for(User passenger : passengers) {
-            Ticket ticket = createTicket(flight, booker, passenger);
+            Ticket ticket = Ticket.createTicket(flight, booker, passenger);
             newTickets.add(ticket);
             database.addTicket(ticket);
 
@@ -47,25 +42,29 @@ public class BookTickets {
 
         // Update flight seats
         flight.setAvailableSeats(flight.getAvailableSeats() - passengers.size());
-        Flight tempFlight=flight;
-        database.getFlights().removeIf(f -> f.getFlightId().equals(tempFlight.getFlightId()));
-        database.addFlight(tempFlight);
 
-        User tempBooker = new User(
-                booker.getUserId(),
-                booker.getName(),
-                booker.getSurname(),
-                new ArrayList<>(booker.getBookedTickets())
-        );
-        newTickets.forEach(ticket -> tempBooker.getBookedTickets().add(ticket.getTicketId()));
-
-        database.getUsers().removeIf(u -> u.getUserId().equals(tempBooker.getUserId()));
-        database.addUser(tempBooker);
-
-        // Add all new tickets
-        newTickets.forEach(database::addTicket);
+        // Add the tickets to the bookers list
+        newTickets.forEach(x -> booker.getBookedTickets().add(x.getTicketId()));
     }
 
+    public void cancelTickets(String ID){
+        Ticket temp = searchEngine.findTicket(ID);
+        if(temp != null){
+            // Removes the ticket ID from the booker's list
+            String bookerID = temp.getBookerId();
+            User booker = searchEngine.findUser(bookerID);
+            booker.getBookedTickets().remove(temp.getTicketId());
+
+            // Removes the user ID from the flight's passenger list and increases the available seats
+            String flightID = temp.getFlightId();
+            Flight flight = searchEngine.findFlight(flightID);
+            flight.getPassengers().remove(temp.getUserId());
+            flight.setAvailableSeats(flight.getAvailableSeats() + 1);
+
+            database.getTickets().remove(temp);
+        }
+        else System.out.println("Ticket could not be found!");
+    }
 
 
     public void cancelTickets(String name, String surname) {
@@ -110,31 +109,25 @@ public class BookTickets {
     }
 
 
-    private User createNewUser(String name, String surname) {
-        String randomid=UUID.randomUUID().toString();
-        User newUser = new User(name, surname, randomid);
-        newUser.setBookedTickets(new ArrayList<>());
-        database.addUser(newUser);
-        return newUser;
-    }
+
 
     //enter booker credentials
-    private User enterBookerCredentials() {
-        System.out.println("\n:   Booker Information   :");
-        System.out.print("Name: ");
-        String name = scanner.nextLine().trim();
-        System.out.print("Surname: ");
-        String surname = scanner.nextLine().trim();
-
-        return database.getUsers().stream()
-                .filter(u -> u.getName().equalsIgnoreCase(name)
-                        && u.getSurname().equalsIgnoreCase(surname))
-                .findFirst()
-                .orElseGet(() -> createNewUser(name, surname));
-    }
+    //private User enterBookerCredentials() {
+    //    System.out.println("\n:   Booker Information   :");
+    //    System.out.print("Name: ");
+    //    String name = scanner.nextLine().trim();
+    //    System.out.print("Surname: ");
+    //    String surname = scanner.nextLine().trim();
+    //
+    //    return database.getUsers().stream()
+    //            .filter(u -> u.getName().equalsIgnoreCase(name)
+    //                    && u.getSurname().equalsIgnoreCase(surname))
+    //            .findFirst()
+    //            .orElseGet(() -> User.createNewUser(name, surname, database));
+    //}
 
     //add passenger information
-    private List<User> addPassengerInformation() {
+    private List<User> createPassengers() {
         List<User> passengers = new ArrayList<>();
         while (true) {
             System.out.println("\n    Add Passenger Information    ");
@@ -149,20 +142,13 @@ public class BookTickets {
                     .filter(u -> u.getName().equalsIgnoreCase(name)
                             && u.getSurname().equalsIgnoreCase(surname))
                     .findFirst()
-                    .orElseGet(() -> createNewUser(name, surname));
+                    .orElseGet(() -> User.createNewUser(name, surname, database));
 
             passengers.add(passenger);
         }
         return passengers;
 
     }
-
-    private Ticket createTicket(Flight flight, User booker, User passenger) {
-        String randomid=UUID.randomUUID().toString();
-        Ticket newTicket = new Ticket(randomid, flight.getFlightId(), passenger.getUserId(), booker.getUserId());
-        return newTicket;
-    }
-
 
 
 }

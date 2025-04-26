@@ -72,6 +72,32 @@ public class Search {
         return null;
     }
 
+
+    public User findUser(String ID){
+        List<User> list = data.getUsers();
+        for(User atr : list){
+            if(atr.getUserId().equals(ID)){
+                return atr;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Finds the ticket which has the given ID.
+     * @param ID ID of the ticket
+     * @return null if specific ID could not be found, but if it is found, then the ticket info
+     */
+    public Ticket findTicket(String ID){
+        List<Ticket> list = data.getTickets();
+        for(Ticket atr : list){
+            if(atr.getTicketId().equals(ID)){
+                return atr;
+            }
+        }
+        return null;
+    }
+
     /**
      * Finds the user by its name and surname.
      * @param name name of the ticket owner
