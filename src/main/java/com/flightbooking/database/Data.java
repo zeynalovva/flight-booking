@@ -17,7 +17,7 @@ import com.flightbooking.Ticket;
 
 
 /**
- * The `Data` class is responsible for managing and storing flight, user, and ticket data.
+ * The <code>Data</code> class is responsible for managing and storing flight, user, and ticket data.
  * It implements the `DataManager` interface to provide functionality for loading/saving data from/to database.
  */
 public class Data implements DataManager{

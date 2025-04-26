@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Ticket {
     @JsonProperty("id")
@@ -48,7 +49,11 @@ public class Ticket {
     public String getBookerId() {
         return bookerId;
     }
-
+    public static Ticket createTicket(Flight flight, User booker, User passenger){
+        String randomid= UUID.randomUUID().toString();
+        Ticket newTicket = new Ticket(randomid, flight.getFlightId(), passenger.getUserId(), booker.getUserId());
+        return newTicket;
+    }
     @Override
     public String toString() {
         return "Ticket{" +
