@@ -78,7 +78,7 @@ public class Search {
      * @param surname surname of the ticket owner
      * @return all data of the user which has exact name and surname
      */
-    private User filterUser(String name, String surname){
+    public User filterUser(String name, String surname){
         List<User> users = data.getUsers();
         for(User atr : users){
             if(atr.getName().equals(name) && atr.getSurname().equals(surname)){

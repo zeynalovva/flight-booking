@@ -64,12 +64,50 @@ public class BookTickets {
 
         // Add all new tickets
         newTickets.forEach(database::addTicket);
-
     }
 
 
 
-    public void cancelTickets(String TicketId){}
+    public void cancelTickets(String name, String surname) {
+        List<Ticket> tickets = searchEngine.filterTickets(name, surname);
+        if (!tickets.isEmpty()) {
+            for (Ticket ticket : tickets) {
+                // Update flight
+                Flight flight = searchEngine.findFlight(ticket.getFlightId());
+                if (flight != null) {
+                    Flight tempFlight = new Flight(
+                            flight.getFlightId(),
+                            flight.getDestination(),
+                            flight.getDateAndTime(),
+                            new ArrayList<>(flight.getPassengers()),
+                            flight.getAvailableSeats() + 1  // Fixed from -1 to +1
+                    );
+                    tempFlight.getPassengers().remove(ticket.getUserId());
+                    database.getFlights().remove(flight);
+                    database.addFlight(tempFlight);
+                }
+                User booker = null;
+                for (User user : database.getUsers()) {
+                    if (user.getUserId().equals(ticket.getBookerId())) {
+                        booker = user;
+                        break;
+                    }
+                }
+                if (booker != null) {
+                    User tempBooker = new User(
+                            booker.getUserId(),
+                            booker.getName(),
+                            booker.getSurname(),
+                            new ArrayList<>(booker.getBookedTickets())
+                    );
+                    tempBooker.getBookedTickets().remove(ticket.getTicketId());
+                    database.getUsers().remove(booker);
+                    database.addUser(tempBooker);
+                }
+                database.getTickets().remove(ticket);
+            }
+        }
+    }
 
 
     private User createNewUser(String name, String surname) {
@@ -82,7 +120,7 @@ public class BookTickets {
 
     //enter booker credentials
     private User enterBookerCredentials() {
-        System.out.println("\n=== Booker Information ===");
+        System.out.println("\n:   Booker Information   :");
         System.out.print("Name: ");
         String name = scanner.nextLine().trim();
         System.out.print("Surname: ");
