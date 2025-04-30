@@ -1,24 +1,22 @@
 package Abbas;
 
+import com.flightbooking.Booking.BookTickets;
 import com.flightbooking.Flight;
 import com.flightbooking.SearchEngine.Search;
+import com.flightbooking.Terminal.Menu;
 import com.flightbooking.database.Data;
 
 import java.util.List;
 
 public class main {
     public static void main(String[] args) {
-        Data data = Data.loadFromFile();
-        List<Flight> list = data.getFlights();
-        Flight temp = null;
-        for(Flight i : list){
-            temp = i;
-        }
-        System.out.println(temp);
-        //System.out.println(list);
-        temp.setAvailableSeats(0);
+        Data base = new Data();
+        Search engine = new Search(base);
+        BookTickets ticket = new BookTickets(engine);
+        Menu menu = new Menu(ticket, engine);
 
-        System.out.println(list);
-
+        System.out.println(base.getFlights());
+        System.out.println(base.getUsers());
+        //menu.showMainMenu();
     }
 }

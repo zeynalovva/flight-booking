@@ -10,7 +10,7 @@ import java.util.List;
 
 public class Search {
 
-    Data data;
+    public Data data;
 
     public Search(Data data){
         this.data = data;

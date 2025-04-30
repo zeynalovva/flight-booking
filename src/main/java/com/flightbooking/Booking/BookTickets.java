@@ -16,10 +16,10 @@ public class BookTickets {
     private final Scanner scanner;
     private final Search searchEngine;
 
-    public BookTickets(Data database, Search search) {
-        this.database = database;
+    public BookTickets(Search search) {
         this.scanner = new Scanner(System.in);
         this.searchEngine = search ;
+        this.database = search.data;
     }
 
     /**

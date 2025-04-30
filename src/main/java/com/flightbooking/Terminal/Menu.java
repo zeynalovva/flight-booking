@@ -18,21 +18,21 @@ public class Menu {
     private final Scanner scanner;
     private final Data database;
 
-    public Menu(BookTickets bookTickets, Search searchEngine,Data database) {
+    public Menu(BookTickets bookTickets, Search searchEngine) {
         this.bookTickets = bookTickets;
         this.searchEngine = searchEngine;
         this.scanner = new Scanner(System.in);
-        this.database = database;
+        this.database = searchEngine.data;
     }
 
     public void showMainMenu() {
+        viewAllFlights();
         while (true) {
             System.out.println("\n----- Main Menu -----");
-            System.out.println("1. View all flights");
-            System.out.println("2. Book a ticket");
-            System.out.println("3. Cancel a ticket");
-            System.out.println("4. View my bookings");
-            System.out.println("5. Exit");
+            System.out.println("1. Book a ticket");
+            System.out.println("2. Cancel a ticket");
+            System.out.println("3. View my bookings");
+            System.out.println("4. Exit");
 
             System.out.print("Choose an option: ");
             try {
@@ -40,18 +40,15 @@ public class Menu {
 
                 switch (choice) {
                     case 1:
-                        viewAllFlights();
-                        break;
-                    case 2:
                         bookTicket();
                         break;
-                    case 3:
+                    case 2:
                         cancelTicket();
                         break;
-                    case 4:
+                    case 3:
                         viewMyBookings();
                         break;
-                    case 5:
+                    case 4:
                         System.out.println("Exiting...");
                         return;
                     default:
