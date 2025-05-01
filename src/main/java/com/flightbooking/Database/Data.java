@@ -1,4 +1,4 @@
-package com.flightbooking.database;
+package com.flightbooking.Database;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
 
 import com.flightbooking.Flight;
 import com.flightbooking.User;
@@ -67,7 +66,6 @@ public class Data implements DataManager{
      */
     public boolean addFlight(Flight flight) {
         if (flight != null && !this.flights.contains(flight)) {
-            // TODO: check only for the flight id
             return this.flights.add(flight);
         }
         return false;
@@ -81,7 +79,6 @@ public class Data implements DataManager{
      */
     public boolean addUser(User user) {
         if (user != null && !this.users.contains(user)) {
-            // TODO: check only for the user id
             return this.users.add(user);
         }
         return false;
@@ -95,7 +92,6 @@ public class Data implements DataManager{
      */
     public boolean addTicket(Ticket ticket) {
         if (ticket != null && !this.tickets.contains(ticket)) {
-            // TODO: check only for the ticket id
             return this.tickets.add(ticket);
         }
         return false;
@@ -117,7 +113,6 @@ public class Data implements DataManager{
             }
             return OBJECT_MAPPER.readValue(file, Data.class);
         } catch (IOException e) {
-            e.printStackTrace();
             return new Data();
         }
     }
@@ -130,8 +125,7 @@ public class Data implements DataManager{
     public void saveToFile() {
         try {
             OBJECT_MAPPER.writeValue(new File(FILE_PATH), this);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ignored) {
         }
     }
 }

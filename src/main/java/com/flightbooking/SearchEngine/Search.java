@@ -3,7 +3,7 @@ package com.flightbooking.SearchEngine;
 import com.flightbooking.Flight;
 import com.flightbooking.Ticket;
 import com.flightbooking.User;
-import com.flightbooking.database.Data;
+import com.flightbooking.Database.Data;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +56,24 @@ public class Search {
             String[] tempDate = atr.getDateAndTime().split(" ");
             if(atr.getDestination().equals(destination)
                     && atr.getAvailableSeats() >= quantity && tempDate[0].equals(date)){
+                temp.add(atr);
+            }
+        }
+        return temp;
+    }
+
+    public List<Flight> filterFlights(String destination, int quantity){
+
+        if (data == null || data.getFlights() == null) {
+            return new ArrayList<>();
+        }
+
+        List<Flight> list = data.getFlights();
+        List<Flight> temp = new ArrayList<>();
+        for(Flight atr : list){
+            String[] tempDate = atr.getDateAndTime().split(" ");
+            if(atr.getDestination().equals(destination)
+                    && atr.getAvailableSeats() >= quantity){
                 temp.add(atr);
             }
         }

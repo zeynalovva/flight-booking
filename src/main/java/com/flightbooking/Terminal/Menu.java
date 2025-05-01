@@ -3,13 +3,14 @@ package com.flightbooking.Terminal;
 import com.flightbooking.Flight;
 import com.flightbooking.Ticket;
 import com.flightbooking.User;
-import com.flightbooking.database.Data;
+import com.flightbooking.Database.Data;
 import com.flightbooking.SearchEngine.Search;
 import com.flightbooking.Booking.BookTickets;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
-import java.util.*;
 
 public class Menu {
 
@@ -17,7 +18,7 @@ public class Menu {
     private final Search searchEngine;
     private final Scanner scanner;
     private final Data database;
-
+    private int quantity;
     public Menu(BookTickets bookTickets, Search searchEngine) {
         this.bookTickets = bookTickets;
         this.searchEngine = searchEngine;
@@ -26,13 +27,15 @@ public class Menu {
     }
 
     public void showMainMenu() {
-        viewAllFlights();
         while (true) {
-            System.out.println("\n----- Main Menu -----");
-            System.out.println("1. Book a ticket");
-            System.out.println("2. Cancel a ticket");
-            System.out.println("3. View my bookings");
-            System.out.println("4. Exit");
+            List<Flight> flights = database.getFlights();
+            showAllFlights(flights);
+            System.out.println("\n|----- Main Menu -----|");
+            System.out.println("1. View a flight");
+            System.out.println("2. Book a ticket");
+            System.out.println("3. Cancel a ticket");
+            System.out.println("4. View my bookings");
+            System.out.println("5. Exit");
 
             System.out.print("Choose an option: ");
             try {
@@ -40,178 +43,169 @@ public class Menu {
 
                 switch (choice) {
                     case 1:
-                        bookTicket();
+                        viewSingleFlight(flights);
                         break;
                     case 2:
-                        cancelTicket();
+                        bookTicket();
                         break;
                     case 3:
-                        viewMyBookings();
+                        cancelTicket();
                         break;
                     case 4:
+                        viewMyBookings();
+                        break;
+                    case 5:
                         System.out.println("Exiting...");
                         return;
                     default:
+                        clearChat();
                         System.out.println("Invalid option. Please try again.");
                 }
             } catch (NumberFormatException e) {
+                clearChat();
                 System.out.println("Invalid input,Please enter a number");
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
     }
 
+    private void showSingleFlight(int index, Flight flight, int menu){
+        if(menu == 1){
+            String[] temp = flight.getDateAndTime().split(" ");
+            System.out.printf("%d. Kiev -> %s | %s | %s|\n",
+                    index+1,
+                    flight.getDestination(),
+                    temp[0],
+                    temp[1]);
+        }
+        else{
+            String[] temp = flight.getDateAndTime().split(" ");
+            System.out.printf("%s | Kiev -> %s | %s | %s | (Seats: %d)%n",
+                    flight.getFlightId(),
+                    flight.getDestination(),
+                    temp[0],
+                    temp[1],
+                    flight.getAvailableSeats());
+        }
+    }
 
-
-
-    private void viewAllFlights() {
-         /// display all available flights!!!!!
-        List<Flight> flights = database.getFlights();
-
-
+    private void showAllFlights(List<Flight> flights){
         if (flights.isEmpty()) {
             System.out.println("No flights available.");
             return;
         }
-
-        System.out.println("\nAll Flights:");
-        for (int i = 0; i < flights.size(); i++) {
-            Flight flight = flights.get(i);
-            System.out.printf("%d. %s - %s - %s (Seats: %d)%n",
-                    i + 1,
-                    flight.getFlightId(),
-                    flight.getDestination(),
-                    flight.getDateAndTime(),
-                    flight.getAvailableSeats());
-        }
-
-        System.out.print("\nSelect a flight to view details (enter number, or 0 to cancel): ");
-        try {
-            int choice = Integer.parseInt(scanner.nextLine());
-            if (choice == 0) return;
-
-            if (choice < 1 || choice > flights.size()) {
-                System.out.println("Invalid flight selection.");
-                return;
+        int counter = 0;
+        System.out.println("\n|----- All Flights -----|");
+        for (int i = 0;i<flights.size();i++) {
+            if(isWithinNext24Hours(flights.get(i).getDateAndTime())){
+                showSingleFlight(counter, flights.get(i), 1);
+                counter++;
             }
+        }
+    }
 
-            Flight selectedFlight = flights.get(choice - 1);
-            displayFlightDetails(selectedFlight);
+
+    private void viewSingleFlight(List<Flight> flights) {
+        clearChat();
+        showAllFlights(flights);
+        System.out.print("\nSelect a flight to view details (enter serial number, flight ID, or 0 to cancel): ");
+        try {
+            String input = scanner.nextLine();
+            if(input.matches("\\d+")){
+                int choice = Integer.parseInt(input);
+                clearChat();
+                if (choice == 0) return;
+
+                if (choice < 1 || choice > flights.size()) {
+
+                    System.out.println("Invalid flight selection.");
+                    return;
+                }
+                Flight selectedFlight = flights.get(choice - 1);
+                showSingleFlight(0, selectedFlight, 0);
+            }
+            else{
+                Flight selectedFlight = searchEngine.findFlight(input);
+                clearChat();
+                if(selectedFlight == null){
+                    System.out.println("Invalid flight selection.");
+                    return;
+                }
+                showSingleFlight(0, selectedFlight, 0);
+            }
         } catch (NumberFormatException e) {
+            clearChat();
             System.out.println("Invalid input.");
         }
     }
 
-
-    private void displayFlightDetails(Flight flight) {
-        System.out.println("\nFlight Details:");
-        System.out.println("Flight ID: " + flight.getFlightId());
-        System.out.println("Destination: " + flight.getDestination());
-        System.out.println("Date and Time: " + flight.getDateAndTime());
-        System.out.println("Available Seats: " + flight.getAvailableSeats());
-        System.out.println("Passengers: " + flight.getPassengers().size() + " people booked");
-
-
+    private void bookTicket() {
+        clearChat();
+        Flight flight = selectFlight();
+        if(flight == null) return;
+        User booker = bookTickets.enterBookerCredentials();
+        List<User> passenger = bookTickets.createPassengers(quantity);
+        bookTickets.Booking(flight, booker, passenger);
+        database.saveToFile();
     }
 
-private void bookTicket() {
-    Flight flight = selectFlight();
-    if (flight == null) {
-        System.out.println("No flight selected.");
-        return;
-    }
-
-    System.out.println("\nEnter your name: ");
-    String name = scanner.nextLine();
-    System.out.println("Enter your surname: ");
-    String surname = scanner.nextLine();
-
-    User user = searchEngine.filterUser(name, surname);
-    if (user == null) {
-        System.out.println("User not found. Create an account? (Y/N)");
-        String response = scanner.nextLine();
-        if (response.equalsIgnoreCase("Y")) {
-            user = new User(UUID.randomUUID().toString(), name, surname);
-            database.addUser(user);
-            //database.saveToFile();
-        } else {
-            return;
-        }
-    }
-
-    List<User> passengers = new ArrayList<>();
-    /*
-    if (flight.getAvailableSeats() < passengers.size()) {
-        System.out.println("Not enough seats available.");
-        return;
-    }*/
-    passengers.add(user);
-    //bookTickets.Booking(flight, user, passengers);
-    bookTickets.Booking(flight, user, passengers);
-    System.out.println("Booking successful!");
-}
 
 
     private void cancelTicket() {
-            System.out.println("\nChoose how to cancel the ticket:");
-            System.out.println("1. By Ticket ID");
-            System.out.println("2. By Name and Surname");
-            System.out.print("Enter your choice: ");
-
-            String choice = scanner.nextLine();
-
-            if (choice.equals("1")) {
-                System.out.print("\nEnter your ticket ID to cancel: ");
-                String ticketId = scanner.nextLine();
-                bookTickets.cancelTickets(ticketId);
-            } else if (choice.equals("2")) {
-                System.out.print("\nEnter your name: ");
-                String name = scanner.nextLine();
-                System.out.print("Enter your surname: ");
-                String surname = scanner.nextLine();
-                bookTickets.cancelTickets(name, surname);
-            } else {
-                System.out.println("Invalid choice, please try again.");
-            }
-        }
+        System.out.print("\nEnter your ticket ID to cancel: ");
+        String ticketId = scanner.nextLine();
+        bookTickets.cancelTickets(ticketId);
+        database.saveToFile();
+    }
 
 
 
     private Flight selectFlight() {
         System.out.print("\nEnter destination: ");
         String destination = scanner.nextLine();
+        if(destination.isEmpty()){
+            System.out.println("Invalid input.");
+            return null;
+        }
         System.out.print("Enter date (YYYY-MM-DD): ");
         String date = scanner.nextLine();
         System.out.print("Enter number of passengers: ");
         try {
-            int quantity = Integer.parseInt(scanner.nextLine());
-            List<Flight> flights = searchEngine.filterFlights(destination, date, quantity);
+            quantity = Integer.parseInt(scanner.nextLine());
+            List<Flight> flights;
+            if(date.isEmpty())
+                flights = searchEngine.filterFlights(destination, quantity);
+            else
+                flights = searchEngine.filterFlights(destination, date, quantity);
 
             if (flights.isEmpty()) {
                 System.out.println("No flights available.");
                 return null;
             }
-
+            int counter = 0;
             System.out.println("\nAvailable flights:");
             for (int i = 0; i < flights.size(); i++) {
                 Flight flight = flights.get(i);
-                System.out.printf("%d. %s - %s - %s (Seats: %d)%n",
-                        i + 1,
-                        flight.getFlightId(),
-                        flight.getDestination(),
-                        flight.getDateAndTime(),
-                        flight.getAvailableSeats());
+                if(!isBefore(flight.getDateAndTime())){
+                    showSingleFlight(counter, flight, 0);
+                    counter++;
+                }
             }
 
-            System.out.print("\nSelect a flight (enter number, or 0 to cancel): ");
-            int choice = Integer.parseInt(scanner.nextLine());
-            if (choice == 0) return null;
-
-            if (choice < 1 || choice > flights.size()) {
-                System.out.println("Invalid selection.");
+            System.out.print("\nSelect a flight (enter the flight ID): ");
+            String choice = scanner.nextLine();
+            clearChat();
+            if (choice.isEmpty()) return null;
+            Flight temp = searchEngine.findFlight(choice);
+            if(temp == null){
+                System.out.println("Invalid input.");
                 return null;
             }
-
-            return flights.get(choice - 1);
+            return temp;
         } catch (NumberFormatException e) {
             System.out.println("Invalid input.");
             return null;
@@ -222,7 +216,7 @@ private void bookTicket() {
         String name = scanner.nextLine();
         System.out.print("Enter your surname: ");
         String surname = scanner.nextLine();
-
+        clearChat();
         User user = searchEngine.filterUser(name, surname);
         if (user == null) {
             System.out.println("User not found.");
@@ -240,10 +234,53 @@ private void bookTicket() {
         System.out.println("\nYour Bookings:");
         for (Ticket ticket : userTickets) {
             Flight flight = searchEngine.findFlight(ticket.getFlightId());
+            System.out.println("Ticket ID: " + ticket.getTicketId());
             System.out.println("Flight ID: " + flight.getFlightId());
             System.out.println("Destination: " + flight.getDestination());
             System.out.println("Date: " + flight.getDateAndTime());
             System.out.println("-----------------------");
         }
+    }
+    private void clearChat(){
+        for (int i = 0; i < 80; ++i) {
+            System.out.println();
+        }
+    }
+
+    public static boolean isWithinNext24Hours(String dateString) {
+        String formatPattern = "yyyy-MM-dd HH:mm";
+        LocalDateTime targetDateTime = null;
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatPattern);
+
+            targetDateTime = LocalDateTime.parse(dateString, formatter);
+
+        }  catch (IllegalArgumentException ignored) {
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime twentyFourHoursLater = now.plusHours(24);
+
+        boolean isNowOrLater = !targetDateTime.isBefore(now);
+        boolean isBeforeCutoff = targetDateTime.isBefore(twentyFourHoursLater);
+
+        return isNowOrLater && isBeforeCutoff;
+    }
+
+    public static boolean isBefore(String dateString) {
+        String formatPattern = "yyyy-MM-dd HH:mm";
+        LocalDateTime targetDateTime = null;
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatPattern);
+
+            targetDateTime = LocalDateTime.parse(dateString, formatter);
+
+        }  catch (IllegalArgumentException ignored) {
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        return targetDateTime.isBefore(now);
     }
 }

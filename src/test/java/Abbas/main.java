@@ -1,22 +1,16 @@
 package Abbas;
 
 import com.flightbooking.Booking.BookTickets;
-import com.flightbooking.Flight;
 import com.flightbooking.SearchEngine.Search;
 import com.flightbooking.Terminal.Menu;
-import com.flightbooking.database.Data;
-
-import java.util.List;
+import com.flightbooking.Database.Data;
 
 public class main {
     public static void main(String[] args) {
-        Data base = new Data();
+        Data base = Data.loadFromFile();
         Search engine = new Search(base);
         BookTickets ticket = new BookTickets(engine);
         Menu menu = new Menu(ticket, engine);
-
-        System.out.println(base.getFlights());
-        System.out.println(base.getUsers());
-        //menu.showMainMenu();
+        menu.showMainMenu();
     }
 }
