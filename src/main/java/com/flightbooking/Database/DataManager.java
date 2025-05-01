@@ -1,4 +1,4 @@
-package com.flightbooking.database;
+package com.flightbooking.Database;
 
 /**
  * Interface for managing data operations such as loading and saving.

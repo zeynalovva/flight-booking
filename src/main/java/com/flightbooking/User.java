@@ -2,12 +2,11 @@ package com.flightbooking;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.flightbooking.database.Data;
+import com.flightbooking.Database.Data;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.UUID;
 
 public class User {
     @JsonProperty("id")
@@ -61,9 +60,9 @@ public class User {
         this.bookedTickets = bookedTickets;
     }
     public static User createNewUser(String name, String surname, Data database){
-        String randomid = UUID.randomUUID().toString();
-        User newUser = new User(name, surname, randomid);
-        newUser.setBookedTickets(new ArrayList<>());
+        String randomid = randomizer(database.getUsers());
+        List<String> booked = new ArrayList<>();
+        User newUser = new User(randomid, name, surname, booked);
         database.addUser(newUser);
         return newUser;
     }
@@ -92,4 +91,25 @@ public class User {
     public int hashCode() {
         return Objects.hash(userId, name, surname, bookedTickets);
     }
+
+    public static String randomizer(List<User> list){
+        int counter;
+        User last;
+        try{
+            last = list.getLast();
+        }
+        catch (Exception e){
+            last = null;
+        }
+        if(last == null)
+            counter = 0;
+        else{
+            String ID = last.getUserId();
+            int temp = Integer.parseInt(ID.substring(3));
+            counter = temp;
+        }
+        counter++;
+        return String.valueOf("USR" + counter);
+    }
+
 }

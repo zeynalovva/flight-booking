@@ -3,23 +3,22 @@ package com.flightbooking.Booking;
 import com.flightbooking.Flight;
 import com.flightbooking.Ticket;
 import com.flightbooking.User;
-import com.flightbooking.database.Data;
+import com.flightbooking.Database.Data;
 import com.flightbooking.SearchEngine.Search;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.UUID;
 
 public class BookTickets {
     private Data database;
     private final Scanner scanner;
     private final Search searchEngine;
 
-    public BookTickets(Data database, Search search) {
-        this.database = database;
+    public BookTickets(Search search) {
         this.scanner = new Scanner(System.in);
         this.searchEngine = search ;
+        this.database = search.data;
     }
 
     /**
@@ -32,9 +31,8 @@ public class BookTickets {
     public void Booking(Flight flight, User booker, List<User> passengers){
         List<Ticket> newTickets = new ArrayList<>();
         for(User passenger : passengers) {
-            Ticket ticket = Ticket.createTicket(flight, booker, passenger);
+            Ticket ticket = Ticket.createTicket(flight, booker, passenger, database);
             newTickets.add(ticket);
-            database.addTicket(ticket);
 
             // Update flight passengers
             flight.getPassengers().add(passenger.getUserId());
@@ -62,78 +60,43 @@ public class BookTickets {
             flight.setAvailableSeats(flight.getAvailableSeats() + 1);
 
             database.getTickets().remove(temp);
+            clearChat();
+            System.out.println("Ticket with the ID of " + ID + " is canceled!");
         }
-        else System.out.println("Ticket could not be found!");
-    }
-
-
-    public void cancelTickets(String name, String surname) {
-        List<Ticket> tickets = searchEngine.filterTickets(name, surname);
-        if (!tickets.isEmpty()) {
-            for (Ticket ticket : tickets) {
-                // Update flight
-                Flight flight = searchEngine.findFlight(ticket.getFlightId());
-                if (flight != null) {
-                    Flight tempFlight = new Flight(
-                            flight.getFlightId(),
-                            flight.getDestination(),
-                            flight.getDateAndTime(),
-                            new ArrayList<>(flight.getPassengers()),
-                            flight.getAvailableSeats() + 1  // Fixed from -1 to +1
-                    );
-                    tempFlight.getPassengers().remove(ticket.getUserId());
-                    database.getFlights().remove(flight);
-                    database.addFlight(tempFlight);
-                }
-                User booker = null;
-                for (User user : database.getUsers()) {
-                    if (user.getUserId().equals(ticket.getBookerId())) {
-                        booker = user;
-                        break;
-                    }
-                }
-                if (booker != null) {
-                    User tempBooker = new User(
-                            booker.getUserId(),
-                            booker.getName(),
-                            booker.getSurname(),
-                            new ArrayList<>(booker.getBookedTickets())
-                    );
-                    tempBooker.getBookedTickets().remove(ticket.getTicketId());
-                    database.getUsers().remove(booker);
-                    database.addUser(tempBooker);
-                }
-                database.getTickets().remove(ticket);
-            }
+        else {
+            clearChat();
+            System.out.println("Ticket could not be found!");
         }
     }
-
 
 
 
     //enter booker credentials
-    //private User enterBookerCredentials() {
-    //    System.out.println("\n:   Booker Information   :");
-    //    System.out.print("Name: ");
-    //    String name = scanner.nextLine().trim();
-    //    System.out.print("Surname: ");
-    //    String surname = scanner.nextLine().trim();
-    //
-    //    return database.getUsers().stream()
-    //            .filter(u -> u.getName().equalsIgnoreCase(name)
-    //                    && u.getSurname().equalsIgnoreCase(surname))
-    //            .findFirst()
-    //            .orElseGet(() -> User.createNewUser(name, surname, database));
-    //}
+    public User enterBookerCredentials() {
+        System.out.println("\n:   Booker Information   :");
+        System.out.print("Name: ");
+        String name = scanner.nextLine().trim();
+        System.out.print("Surname: ");
+        String surname = scanner.nextLine().trim();
+
+        return database.getUsers().stream()
+                .filter(u -> u.getName().equalsIgnoreCase(name)
+                        && u.getSurname().equalsIgnoreCase(surname))
+                .findFirst()
+                .orElseGet(() -> User.createNewUser(name, surname, database));
+    }
 
     //add passenger information
-    private List<User> createPassengers() {
+    public List<User> createPassengers(int quantity) {
         List<User> passengers = new ArrayList<>();
-        while (true) {
-            System.out.println("\n    Add Passenger Information    ");
-            System.out.print("Name (empty to finish): ");
+        while (quantity > 0) {
+            System.out.println("\n:    Add Passenger Information    :");
+            System.out.print("Name: ");
             String name = scanner.nextLine().trim();
-            if (name.isEmpty()) break;
+            if (name.isEmpty()) {
+                System.out.println("Name cannot be empty!");
+                continue;
+            }
 
             System.out.print("Surname: ");
             String surname = scanner.nextLine().trim();
@@ -145,10 +108,16 @@ public class BookTickets {
                     .orElseGet(() -> User.createNewUser(name, surname, database));
 
             passengers.add(passenger);
+            quantity--;
         }
         return passengers;
 
     }
 
+    private void clearChat(){
+        for (int i = 0; i < 80; ++i) {
+            System.out.println();
+        }
+    }
 
 }
